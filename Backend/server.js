@@ -28,17 +28,16 @@ const validatePassword = (password) => {
 };
 
 const corsOptions = {
-  origin: 'localhost:3000', // Alleen verzoeken van deze origin toestaan
-  methods: ['GET', 'POST'], // Toegestane HTTP-methodes
-  allowedHeaders: ['Content-Type', 'Authorization'], // Toegestane headers
-  credentials: true // Cookies en Authorization-headers toestaan
+  origin: 'http://localhost:3000/', // Toestaan van verzoeken van deze origin
+  optionsSuccessStatus: 200,
 };
+
 
 // Create an Express app
 const app = express();
-app.use(cors(corsOptions)); // To allow cross-origin requests
-app.use(express.json()); // To parse JSON bodies
 
+app.use(express.json()); // To parse JSON bodies
+app.use(cors(corsOptions));
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
