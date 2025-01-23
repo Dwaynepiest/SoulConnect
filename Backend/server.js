@@ -39,8 +39,8 @@ app.use(express.json()); // To parse JSON bodies
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'dwaynepiest@gmail.com',
-    pass: 'xigf bflc yymj olqm', // Gebruik een app-specifiek wachtwoord in plaats van je echte wachtwoord
+    user: process.env.USER,
+    pass: process.env.PASS, // Gebruik een app-specifiek wachtwoord in plaats van je echte wachtwoord
   },
 });
 
@@ -86,8 +86,8 @@ app.post('/users', apiKeyMiddleware, async (req, res) => {
 
       // Insert the new user with is_verified set to 0
       db.query(
-        'INSERT INTO users (nickname, email, password, birth_date, zip_code, gender, accept_service, payment, foto, admin, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
-        [nickname, email, hashedPassword, birth_date, zip_code, gender, accept_service, payment, foto, admin, verificationToken],
+        'INSERT INTO users (nickname, email, password, birth_date, zip_code, gender, accept_service, foto, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
+        [nickname, email, hashedPassword, birth_date, zip_code, gender, accept_service, foto, verificationToken],
         async (err, results) => {
           if (err) {
             return res.status(500).send(err);
