@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { messages as initialMessages } from './messages'; 
 import './berichten.css';
+import Header from '../../Components/Header/Header';
 
 function ChatPage() {
   const { messageId } = useParams(); 
@@ -33,6 +34,8 @@ function ChatPage() {
   };
 
   return (
+    <>
+    <Header/> 
     <div>
       <h2 className="chat-header">Chat with {messageId}</h2>
       <div className="messages-container">
@@ -67,6 +70,7 @@ function ChatPage() {
         </button>
       </div>
     </div>
+    </>
   );
 }
 

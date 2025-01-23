@@ -5,18 +5,21 @@ import Registreren from './pages/Register/Registreren';
 import ProfielAanmaken from './pages/profiel-aanmaken/profiel-aanmaken'; 
 import BerichtenPagina from './pages/Berichten/berichten';
 import ChatPage from './pages/Berichten/bericht';
+import Home from './pages/Home/Home';
+import Dashboard from './pages/Dashboard/Dashboard';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Registreren />} />
         <Route path="/profiel-aanmaken" element={<ProfielAanmaken />} />
         <Route path="/berichten" element={<BerichtenPagina />}>
           <Route path=":messageId" element={<ChatPage />} />
         </Route>
+        <Route path="/dashboard" element={<Dashboard />} /> 
         
       </Routes>
     </Router>

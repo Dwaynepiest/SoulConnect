@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, Outlet } from 'react-router-dom'; 
 import { messages } from './messages'; 
 import './berichten.css';
+import Header from '../../Components/Header/Header';
 
 function BerichtenPagina() {
   const [messagesData, setMessagesData] = useState([]);
@@ -30,6 +31,8 @@ function BerichtenPagina() {
   const lastMessagesArray = Object.values(lastMessages);
 
   return (
+    <>
+    <Header />
     <div className="main-container">
       <div className="sidebar">
         <h2>Chats</h2>
@@ -59,6 +62,7 @@ function BerichtenPagina() {
         <Outlet /> 
       </div>
     </div>
+    </>
   );
 }
 
