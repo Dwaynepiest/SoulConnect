@@ -5,7 +5,6 @@ const db = require('./db'); // Import the database connection
 const port = 3001;
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const cors = require('cors');
 require('dotenv').config();
 
 
@@ -29,17 +28,16 @@ const validatePassword = (password) => {
 };
 
 const corsOptions = {
-  origin: 'https://example.com', // Alleen verzoeken van deze origin toestaan
-  methods: ['GET', 'POST'], // Toegestane HTTP-methodes
-  allowedHeaders: ['Content-Type', 'Authorization'], // Toegestane headers
-  credentials: true // Cookies en Authorization-headers toestaan
+  origin: 'http://localhost:3000/', // Toestaan van verzoeken van deze origin
+  optionsSuccessStatus: 200,
 };
+
 
 // Create an Express app
 const app = express();
-app.use(cors(corsOptions)); // To allow cross-origin requests
-app.use(express.json()); // To parse JSON bodies
 
+app.use(express.json()); // To parse JSON bodies
+app.use(cors(corsOptions));
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
