@@ -524,6 +524,93 @@ app.post('/like', apiKeyMiddleware, (req, res) => {
   });
 });
 
+
+app.get('/matches/:userId', apiKeyMiddleware, (req, res) => {
+  const { userId } = req.params;
+
+  // Get matches where the user is involved
+  db.query(
+    'SELECT m.match_id, u1.user_id AS user1_id, u1.nickname AS user1_nickname, u2.user_id AS user2_id, u2.nickname AS user2_nickname ' +
+    'FROM matches m ' +
+    'JOIN users u1 ON m.user1_id = u1.user_id ' +
+    'JOIN users u2 ON m.user2_id = u2.user_id ' +
+    'WHERE m.user1_id = ? OR m.user2_id = ?',
+    [userId, userId],
+    (err, results) => {
+      if (err) return res.status(500).send(err);
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'No matches found' });
+      }
+
+      res.json({ matches: results });
+    }
+  );
+});
+
+app.get('/match/:userId/:likedUserId', apiKeyMiddleware, (req, res) => {
+  const { userId, likedUserId } = req.params;
+
+  // Check for a match between userId and likedUserId
+  db.query(
+    'SELECT * FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)',
+    [userId, likedUserId, likedUserId, userId],
+    (err, results) => {
+      if (err) return res.status(500).send(err);
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'No match found between these users' });
+      }
+
+      res.json({ match: results[0] });
+    }
+  );
+});
+
+app.delete('/unlike', apiKeyMiddleware, (req, res) => {
+  const { userId, likedUserId } = req.body;
+
+  // Remove user's like from the 'likes' table
+  db.query(
+    'DELETE FROM likes WHERE user_id = ? AND liked_user_id = ?',
+    [userId, likedUserId],
+    (err, result) => {
+      if (err) return res.status(500).send(err);
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Like not found' });
+      }
+
+      // Check if a match exists between the users
+      db.query(
+        'SELECT * FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)',
+        [userId, likedUserId, likedUserId, userId],
+        (err, matchResults) => {
+          if (err) return res.status(500).send(err);
+
+          // If a match exists, remove it
+          if (matchResults.length > 0) {
+            db.query(
+              'DELETE FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)',
+              [userId, likedUserId, likedUserId, userId],
+              (err) => {
+                if (err) return res.status(500).send(err);
+                return res.json({ message: 'Like removed, match deleted' });
+              }
+            );
+          } else {
+            res.json({ message: 'Like removed, no match existed' });
+          }
+        }
+      );
+    }
+  );
+});
+
+
+
+
+
 // Start the serverx
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}/`);
