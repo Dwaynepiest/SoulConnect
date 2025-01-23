@@ -5,7 +5,7 @@ const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'soulconnect'
+    database: 'soulconnnect'
 });
 
 // const mysql = require('mysql2/promise');
