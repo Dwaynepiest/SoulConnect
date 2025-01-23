@@ -30,22 +30,36 @@ const validatePassword = (password) => {
 };
 
 const corsOptions = {
-    origin: 'http://localhost:3001', // Specifieke origin
-    credentials: true 
-  }
+  origin: 'http://localhost:3000/', // Toestaan van verzoeken van deze origin
+  optionsSuccessStatus: 200,
+};
+
+
 // Create an Express app
 const app = express();
+
 app.use(cors(corsOptions)); // To allow cross-origin requests
 app.use(express.json()); // To parse JSON bodies
 const server = http.createServer(app);
 const io = socketIo(server);
 
+
+
+app.use(express.json()); // To parse JSON bodies
+app.use(cors(corsOptions));
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.USER,
     pass: process.env.PASS, // Gebruik een app-specifiek wachtwoord in plaats van je echte wachtwoord
   },
+});
+ 
+app.get('/users', apiKeyMiddleware, (req, res) => {
+  db.query('SELECT * FROM users', (err, results) => {
+      if (err) return res.status(500).send(err);
+      res.json(results);
+  });
 });
 
 app.post('/users', apiKeyMiddleware, async (req, res) => {
@@ -528,7 +542,6 @@ app.post('/like', apiKeyMiddleware, (req, res) => {
   });
 });
 
-
 app.get('/matches/:userId', apiKeyMiddleware, (req, res) => {
   const { userId } = req.params;
 
@@ -611,6 +624,7 @@ app.delete('/unlike', apiKeyMiddleware, (req, res) => {
   );
 });
 
+
 // Endpoint to create a chat room
 app.post('/create-room', (req, res) => {
   const { user1_id, user2_id } = req.body;
@@ -665,8 +679,6 @@ io.on('connection', (socket) => {
     console.log('User  disconnected');
   });
 });
-
-
 
 // Start the serverx
 app.listen(port, () => {
