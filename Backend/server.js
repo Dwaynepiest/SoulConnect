@@ -28,7 +28,7 @@ const validatePassword = (password) => {
 };
 
 const corsOptions = {
-  origin: 'https://example.com', // Alleen verzoeken van deze origin toestaan
+  origin: 'localhost:3000', // Alleen verzoeken van deze origin toestaan
   methods: ['GET', 'POST'], // Toegestane HTTP-methodes
   allowedHeaders: ['Content-Type', 'Authorization'], // Toegestane headers
   credentials: true // Cookies en Authorization-headers toestaan
