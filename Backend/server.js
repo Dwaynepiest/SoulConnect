@@ -44,6 +44,13 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+app.get('/users', apiKeyMiddleware, (req, res) => {
+  db.query('SELECT * FROM users', (err, results) => {
+      if (err) return res.status(500).send(err);
+      res.json(results);
+  });
+});
+
 app.post('/users', apiKeyMiddleware, async (req, res) => {
   const { 
     nickname, 
