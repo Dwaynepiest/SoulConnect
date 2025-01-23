@@ -5,6 +5,7 @@ const db = require('./db'); // Import the database connection
 const port = 3001;
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const cors = require('cors');
 require('dotenv').config();
 
 
@@ -28,9 +29,12 @@ const validatePassword = (password) => {
 };
 
 const corsOptions = {
-    origin: 'http://localhost:3001', // Specifieke origin
-    credentials: true 
-  }
+  origin: 'https://example.com', // Alleen verzoeken van deze origin toestaan
+  methods: ['GET', 'POST'], // Toegestane HTTP-methodes
+  allowedHeaders: ['Content-Type', 'Authorization'], // Toegestane headers
+  credentials: true // Cookies en Authorization-headers toestaan
+};
+
 // Create an Express app
 const app = express();
 app.use(cors(corsOptions)); // To allow cross-origin requests
@@ -39,9 +43,16 @@ app.use(express.json()); // To parse JSON bodies
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'dwaynepiest@gmail.com',
-    pass: 'xigf bflc yymj olqm', // Gebruik een app-specifiek wachtwoord in plaats van je echte wachtwoord
+    user: process.env.USER,
+    pass: process.env.PASS, // Gebruik een app-specifiek wachtwoord in plaats van je echte wachtwoord
   },
+});
+ 
+app.get('/users', apiKeyMiddleware, (req, res) => {
+  db.query('SELECT * FROM users', (err, results) => {
+      if (err) return res.status(500).send(err);
+      res.json(results);
+  });
 });
 
 app.post('/users', apiKeyMiddleware, async (req, res) => {
@@ -86,8 +97,8 @@ app.post('/users', apiKeyMiddleware, async (req, res) => {
 
       // Insert the new user with is_verified set to 0
       db.query(
-        'INSERT INTO users (nickname, email, password, birth_date, zip_code, gender, accept_service, payment, foto, admin, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
-        [nickname, email, hashedPassword, birth_date, zip_code, gender, accept_service, payment, foto, admin, verificationToken],
+        'INSERT INTO users (nickname, email, password, birth_date, zip_code, gender, accept_service, foto, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
+        [nickname, email, hashedPassword, birth_date, zip_code, gender, accept_service, foto, verificationToken],
         async (err, results) => {
           if (err) {
             return res.status(500).send(err);
