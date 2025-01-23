@@ -5,7 +5,6 @@ const db = require('./db'); // Import the database connection
 const port = 3001;
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const cors = require('cors');
 require('dotenv').config();
 
 
