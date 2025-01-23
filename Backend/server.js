@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+
 const apiKeyMiddleware = (req, res, next) => {
   const apiKey = req.headers['api-key']; // API key is sent in the 'x-api-key' header
 
@@ -34,7 +35,6 @@ const corsOptions = {
 const app = express();
 app.use(cors(corsOptions)); // To allow cross-origin requests
 app.use(express.json()); // To parse JSON bodies
-
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -415,6 +415,7 @@ app.get('/relatieschap', apiKeyMiddleware, (req, res) => {
   });
 });
 
+
 app.post('/relatieschap/:user_id', apiKeyMiddleware, async (req, res) => {
   const { user_id } = req.params;
   const { preference, one_liner, relation, location } = req.body;
@@ -480,6 +481,48 @@ app.post('/relatieschap/:user_id', apiKeyMiddleware, async (req, res) => {
   });
 });
 
+app.post('/like', apiKeyMiddleware, (req, res) => {
+  const { userId, likedUserId } = req.body;
+
+  // Check if the user has already liked the other user
+  db.query('SELECT * FROM likes WHERE user_id = ? AND liked_user_id = ?', [userId, likedUserId], (err, results) => {
+    if (err) return res.status(500).send(err);
+
+    if (results.length > 0) {
+      return res.status(400).json({ message: 'You already liked this user' });
+    }
+
+    // Insert like
+    db.query('INSERT INTO likes (user_id, liked_user_id) VALUES (?, ?)', [userId, likedUserId], (err) => {
+      if (err) return res.status(500).send(err);
+
+      // Check for mutual like to create a match
+      db.query('SELECT * FROM likes WHERE user_id = ? AND liked_user_id = ?', [likedUserId, userId], (err, mutualResults) => {
+        if (err) return res.status(500).send(err);
+
+        if (mutualResults.length > 0) {
+          // Avoid duplicate matches
+          db.query('SELECT * FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)',
+            [userId, likedUserId, likedUserId, userId], (err, matchResults) => {
+              if (err) return res.status(500).send(err);
+
+              if (matchResults.length === 0) {
+                db.query('INSERT INTO matches (user1_id, user2_id) VALUES (?, ?)', 
+                  [Math.min(userId, likedUserId), Math.max(userId, likedUserId)], (err) => {
+                    if (err) return res.status(500).send(err);
+                    return res.json({ message: 'It\'s a match!' });
+                  });
+              } else {
+                return res.json({ message: 'User liked successfully. A match already exists.' });
+              }
+            });
+        } else {
+          res.json({ message: 'User liked successfully' });
+        }
+      });
+    });
+  });
+});
 
 // Start the serverx
 app.listen(port, () => {

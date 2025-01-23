@@ -8,6 +8,20 @@ const db = mysql.createConnection({
     database: 'soulconnnect'
 });
 
+// const mysql = require('mysql2/promise');
+
+// const db = mysql.createPool({
+//   host: 'localhost',
+//   user: 'root',
+//   password: '',
+//   database: 'soulconnect',
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   queueLimit: 0
+// });
+
+
+
 // MySQL connection
 // const db = mysql.createConnection({
 //     host: 'db.22literverf.store',
