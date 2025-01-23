@@ -45,8 +45,6 @@ const io = socketIo(server);
 
 
 
-app.use(express.json()); // To parse JSON bodies
-app.use(cors(corsOptions));
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -498,6 +496,9 @@ app.post('/relatieschap/:user_id', apiKeyMiddleware, async (req, res) => {
     }
   });
 });
+
+//////////////////////////////////////////////////////////////////
+
 
 app.post('/like', apiKeyMiddleware, (req, res) => {
   const { userId, likedUserId } = req.body;
