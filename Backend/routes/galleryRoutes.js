@@ -44,7 +44,42 @@ router.post('/', apiKeyMiddleware, async (req, res) => {
     }
   });
   
-
+  router.delete('/:gallery_id', apiKeyMiddleware, async (req, res) => {
+    const { gallery_id } = req.params;
+  
+    console.log('Request parameters:', req.params); // Log de parameters voor debugging
+  
+    // Controleer of gallery_id aanwezig is
+    if (!gallery_id) {
+      return res.status(400).send('Gallery ID is verplicht.');
+    }
+  
+    try {
+      // Verwijder de post met de bijbehorende gallery_id uit de database
+      db.query(
+        'DELETE FROM gallery WHERE gallery_id = ?',
+        [gallery_id],
+        (err, results) => {
+          if (err) {
+            return res.status(500).send('Fout bij het verwijderen van de afbeelding uit de database.');
+          }
+  
+          // Controleer of er posts zijn verwijderd
+          if (results.affectedRows === 0) {
+            return res.status(404).send('Post met het opgegeven gallery_id niet gevonden.');
+          }
+  
+          res.json({
+            message: 'Afbeelding succesvol verwijderd.',
+            gallery_id,
+          });
+        }
+      );
+    } catch (err) {
+      console.error('Fout bij het verwerken van de aanvraag:', err);
+      res.status(500).send('Er is een fout opgetreden bij het verwijderen van de afbeelding.');
+    }
+  });
 
 
   module.exports = router;
