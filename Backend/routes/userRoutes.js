@@ -25,7 +25,7 @@ router.get('/', apiKeyMiddleware, (req, res) => {
   });
 });
 
-router.post('/', apiKeyMiddleware, async (req, res) => {
+router.post('/', async (req, res) => {
   const { 
     nickname, 
     email, 
@@ -96,7 +96,7 @@ router.post('/', apiKeyMiddleware, async (req, res) => {
             }
 
             res.json({
-              message: 'Gebruiker succesvol geregistreerd. Controleer je e-mail om je account te verifiëren.',
+              message: 'Account succesvol geregistreerd. Controleer je e-mail om je account te verifiëren.',
               id: results.insertId,
               nickname,
               email,
@@ -111,41 +111,15 @@ router.post('/', apiKeyMiddleware, async (req, res) => {
   }
 });
 
-router.get('/verify-email', apiKeyMiddleware, (req, res) => {
-  const { token } = req.query;
 
-  if (!token) {
-    return res.status(400).send('Geen verificatietoken opgegeven.');
-  }
 
-  // Zoek de gebruiker op basis van de verificatietoken
-  db.query('SELECT * FROM users WHERE verification_token = ?', [token], (err, results) => {
-    if (err) {
-      return res.status(500).send('Databasefout bij het controleren van de token.');
-    }
-
-    if (results.length === 0) {
-      return res.status(400).send('Ongeldige of verlopen verificatietoken.');
-    }
-
-    // De gebruiker is gevonden, dus werk de verificatie bij naar 1
-    db.query('UPDATE users SET is_verified = 1, verification_token = NULL WHERE verification_token = ?', [token], (err) => {
-      if (err) {
-        return res.status(500).send('Fout bij het verifiëren van de gebruiker.');
-      }
-
-      res.send('E-mailadres succesvol geverifieerd. Je kunt nu inloggen.');
-    });
-  });
-});
-
-router.post('/login', apiKeyMiddleware, async (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
       if (err) return res.status(500).send('Er is een fout opgetreden.');
       
-      if (results.length === 0) return res.status(400).send('Gebruiker niet gevonden.');
+      if (results.length === 0) return res.status(400).send('Account niet gevonden.');
 
       const klant = results[0];
 
@@ -161,7 +135,7 @@ router.post('/login', apiKeyMiddleware, async (req, res) => {
   });
 });
 
-router.put('/:id', apiKeyMiddleware, async (req, res) => {
+router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { 
     email, 
@@ -180,7 +154,7 @@ router.put('/:id', apiKeyMiddleware, async (req, res) => {
       return res.status(500).send(err);
     }
     if (results.length === 0) {
-      return res.status(404).send('Gebruiker niet gevonden.');
+      return res.status(404).send('Account niet gevonden.');
     }
 
     const user = results[0];
@@ -193,7 +167,7 @@ router.put('/:id', apiKeyMiddleware, async (req, res) => {
         }
 
         if (emailResults.length > 0) {
-          return res.status(400).send('Een gebruiker met dit e-mailadres bestaat al.');
+          return res.status(400).send('Een account met dit e-mailadres bestaat al.');
         }
 
         // Als het e-mailadres geldig is, ga door met bijwerken
@@ -203,7 +177,7 @@ router.put('/:id', apiKeyMiddleware, async (req, res) => {
       // Als het e-mailadres niet wordt bijgewerkt of het is geldig, ga door met bijwerken
       updateUserData();
     }
-
+    
     // Functie om de gebruiker bij te werken
     async function updateUserData() {
       // Als het wachtwoord wordt bijgewerkt, controleren of het oude wachtwoord correct is en het nieuwe wachtwoord is bevestigd
@@ -253,7 +227,7 @@ router.put('/:id', apiKeyMiddleware, async (req, res) => {
           }
 
           res.json({
-            message: 'Gebruiker succesvol bijgewerkt',
+            message: 'Account succesvol bijgewerkt',
             id,
             ...updatedUser,
           });
@@ -263,7 +237,7 @@ router.put('/:id', apiKeyMiddleware, async (req, res) => {
   });
 });
 
-router.delete('/:user_id', apiKeyMiddleware, async (req, res) => {
+router.delete('/:user_id', async (req, res) => {
   const { user_id } = req.params; // Haal user_id uit de URL-parameter
 
   console.log('Request params:', req.params); // Log de request parameters voor debugging
@@ -286,18 +260,18 @@ router.delete('/:user_id', apiKeyMiddleware, async (req, res) => {
       // Verwijder de gebruiker uit de database
       db.query('DELETE FROM users WHERE user_id = ?', [user_id], (err, results) => {
         if (err) {
-          return res.status(500).send('Fout bij het verwijderen van de gebruiker.');
+          return res.status(500).send('Fout bij het verwijderen van je account, contacteer een beheerder!.');
         }
 
         res.json({
-          message: 'Account succesvol verwijders.',
+          message: 'Account succesvol verwijderd.',
           user_id,
         });
       });
     });
   } catch (err) {
     console.error('Error during user deletion:', err);
-    res.status(500).send('Er is een fout opgetreden tijdens het verwijderen van de gebruiker.');
+    res.status(501).send('Er is een fout opgetreden tijdens het verwijderen van je account, contacteer een beheerder!.');
   }
 });
 
