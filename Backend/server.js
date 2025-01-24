@@ -9,7 +9,7 @@ require('dotenv').config();
 
 
 const apiKeyMiddleware = (req, res, next) => {
-  const apiKey = req.headers['api-key']; // API key is sent in the 'x-api-key' header
+  const apiKey = req.headers['x-api-key']; // API key is sent in the 'x-api-key' header
 
   if (!apiKey || apiKey !== process.env.API_KEY) {
       return res.status(403).send('Forbidden: Geen geldige API Key');
@@ -18,17 +18,33 @@ const apiKeyMiddleware = (req, res, next) => {
 };
 
 const validatePassword = (password) => {
+  if (!password) {
+    console.log('Password is undefined or empty');
+    return false;
+  }
+
   const minLength = 16;
   const hasUppercase = /[A-Z]/.test(password);
-  const hasLowercase = /[a-z]/.test(password);  const hasNumber = /[0-9]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
   const hasSpecialChar = /[@$!%*?&#]/.test(password);
 
-  return password.length >= minLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+  const isValid = password.length >= minLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+  console.log(`Password validation result: ${isValid}`);
+  console.log(`Password: ${password}`);
+  console.log(`Length: ${password.length >= minLength}`);
+  console.log(`Uppercase: ${hasUppercase}`);
+  console.log(`Lowercase: ${hasLowercase}`);
+  console.log(`Number: ${hasNumber}`);
+  console.log(`SpecialChar: ${hasSpecialChar}`);
+  return isValid;
 };
 
 const corsOptions = {
-  origin: 'http://localhost:3000/', // Toestaan van verzoeken van deze origin
-  optionsSuccessStatus: 200,
+  origin: 'http://localhost:3000', // Vervang dit door je frontend-URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Voeg hier de methoden toe die je wilt toestaan
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'], // Voeg hier de headers toe die je wilt toestaan
+  optionsSuccessStatus: 200, // Voor IE11 en oudere browsers
 };
 
 
@@ -37,6 +53,7 @@ const app = express();
 
 app.use(express.json()); // To parse JSON bodies
 app.use(cors(corsOptions));
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -64,9 +81,11 @@ app.post('/users', apiKeyMiddleware, async (req, res) => {
     foto
   } = req.body;
 
+  console.log('Request body:', req.body); // Log the request body for debugging
+
   // Validate password strength
   if (!validatePassword(password)) {
-    return res.status(400).send('Wachtwoord voldoet niet aan de vereisten. Minimaal 8 tekens, inclusief hoofdletter, kleine letter, nummer en speciaal teken.');
+    return res.status(400).send('Wachtwoord voldoet niet aan de vereisten. Minimaal 16 tekens, inclusief hoofdletter, kleine letter, nummer en speciaal teken.');
   }
 
   // Validate accept_service (must be true)
@@ -532,8 +551,89 @@ app.post('/like', apiKeyMiddleware, (req, res) => {
   });
 });
 
-// Start the serverx
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`);
+app.get('/matches/:userId', apiKeyMiddleware, (req, res) => {
+  const { userId } = req.params;
+
+  // Get matches where the user is involved
+  db.query(
+    'SELECT m.match_id, u1.user_id AS user1_id, u1.nickname AS user1_nickname, u2.user_id AS user2_id, u2.nickname AS user2_nickname ' +
+    'FROM matches m ' +
+    'JOIN users u1 ON m.user1_id = u1.user_id ' +
+    'JOIN users u2 ON m.user2_id = u2.user_id ' +
+    'WHERE m.user1_id = ? OR m.user2_id = ?',
+    [userId, userId],
+    (err, results) => {
+      if (err) return res.status(500).send(err);
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'No matches found' });
+      }
+
+      res.json({ matches: results });
+    }
+  );
 });
 
+app.get('/match/:userId/:likedUserId', apiKeyMiddleware, (req, res) => {
+  const { userId, likedUserId } = req.params;
+
+  // Check for a match between userId and likedUserId
+  db.query(
+    'SELECT * FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)',
+    [userId, likedUserId, likedUserId, userId],
+    (err, results) => {
+      if (err) return res.status(500).send(err);
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'No match found between these users' });
+      }
+
+      res.json({ match: results[0] });
+    }
+  );
+});
+
+app.delete('/unlike', apiKeyMiddleware, (req, res) => {
+  const { userId, likedUserId } = req.body;
+
+  // Remove user's like from the 'likes' table
+  db.query(
+    'DELETE FROM likes WHERE user_id = ? AND liked_user_id = ?',
+    [userId, likedUserId],
+    (err, result) => {
+      if (err) return res.status(500).send(err);
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Like not found' });
+      }
+
+      // Check if a match exists between the users
+      db.query(
+        'SELECT * FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)',
+        [userId, likedUserId, likedUserId, userId],
+        (err, matchResults) => {
+          if (err) return res.status(500).send(err);
+
+          // If a match exists, remove it
+          if (matchResults.length > 0) {
+            db.query(
+              'DELETE FROM matches WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)',
+              [userId, likedUserId, likedUserId, userId],
+              (err) => {
+                if (err) return res.status(500).send(err);
+                return res.json({ message: 'Like removed, match deleted' });
+              }
+            );
+          } else {
+            res.json({ message: 'Like removed, no match existed' });
+          }
+        }
+      );
+    }
+  );
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
