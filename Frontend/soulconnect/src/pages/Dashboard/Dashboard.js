@@ -6,16 +6,15 @@ import Header from '../../Components/Header/Header';
 function Dashboard() {
   return (
     <>
-    <div>
         <Header /> 
-        </div>
-    <div className="Dashboard">
         
-      <h1>Welkom terug</h1>
+    <div className="dashboard">
+        
+      <h1 className='center'>Welkom terug</h1>
 
       <section className="liked-section">
-        <h2>Mensen die jou hebben geliked:</h2>
-        <div className="cards">
+        <h2 className='center'>Mensen die jou hebben geliked:</h2>
+        <div className="cards-liked">
           {dummyData.liked.map((person, index) => (
             <div key={index} className="card">
               <div className="avatar"></div>
@@ -29,8 +28,8 @@ function Dashboard() {
       </section>
 
       <section className="potential-section">
-        <h2>Mensen die je misschien wel leuk vindt</h2>
-        <div className="cards">
+        <h2 className='center'>Mensen die je misschien wel leuk vindt</h2>
+        <div className="cards-potential">
           {dummyData.potentialMatches.map((person, index) => (
             <div key={index} className="card">
               <div className="avatar"></div>
