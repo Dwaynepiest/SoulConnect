@@ -13,6 +13,9 @@ const transporter = nodemailer.createTransport({
     user: process.env.USER,
     pass: process.env.PASS, // Gebruik een app-specifiek wachtwoord in plaats van je echte wachtwoord
   },
+  tls: {
+    rejectUnauthorized: false // Voeg deze regel toe om zelfondertekende certificaten toe te staan
+  }
 });
 
 router.get('/', apiKeyMiddleware, (req, res) => {
