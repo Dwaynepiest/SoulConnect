@@ -625,6 +625,21 @@ app.delete('/unlike', apiKeyMiddleware, (req, res) => {
   );
 });
 
+app.get('/likes/:userId', apiKeyMiddleware, (req, res) => {
+  const { userId } = req.params;
+
+  // Query to get all users who liked the given userId
+  db.query('SELECT user_id FROM likes WHERE liked_user_id = ?', [userId], (err, results) => {
+    if (err) return res.status(500).send(err);
+
+    if (results.length === 0) {
+      return res.json({ message: 'No one has liked you yet' });
+    }
+
+    res.json({ likedBy: results });
+  });
+});
+
 
 // Endpoint to create a chat room
 app.post('/create-room', (req, res) => {
