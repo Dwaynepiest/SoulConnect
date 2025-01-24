@@ -22,7 +22,7 @@ router.get('/', apiKeyMiddleware, (req, res) => {
   });
 });
 
-router.post('/', apiKeyMiddleware, async (req, res) => {
+router.post('/', async (req, res) => {
   const { 
     nickname, 
     email, 
@@ -108,35 +108,9 @@ router.post('/', apiKeyMiddleware, async (req, res) => {
   }
 });
 
-router.get('/verify-email', apiKeyMiddleware, (req, res) => {
-  const { token } = req.query;
 
-  if (!token) {
-    return res.status(400).send('Geen verificatietoken opgegeven.');
-  }
 
-  // Zoek de gebruiker op basis van de verificatietoken
-  db.query('SELECT * FROM users WHERE verification_token = ?', [token], (err, results) => {
-    if (err) {
-      return res.status(500).send('Databasefout bij het controleren van de token.');
-    }
-
-    if (results.length === 0) {
-      return res.status(400).send('Ongeldige of verlopen verificatietoken.');
-    }
-
-    // De gebruiker is gevonden, dus werk de verificatie bij naar 1
-    db.query('UPDATE users SET is_verified = 1, verification_token = NULL WHERE verification_token = ?', [token], (err) => {
-      if (err) {
-        return res.status(500).send('Fout bij het verifiëren van je account, contacteer een beheerder');
-      }
-
-      res.send('E-mailadres succesvol geverifieerd. Je kunt nu inloggen.');
-    });
-  });
-});
-
-router.post('/login', apiKeyMiddleware, async (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
@@ -158,7 +132,7 @@ router.post('/login', apiKeyMiddleware, async (req, res) => {
   });
 });
 
-router.put('/:id', apiKeyMiddleware, async (req, res) => {
+router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { 
     email, 
@@ -260,7 +234,7 @@ router.put('/:id', apiKeyMiddleware, async (req, res) => {
   });
 });
 
-router.delete('/:user_id', apiKeyMiddleware, async (req, res) => {
+router.delete('/:user_id', async (req, res) => {
   const { user_id } = req.params; // Haal user_id uit de URL-parameter
 
   console.log('Request params:', req.params); // Log de request parameters voor debugging
