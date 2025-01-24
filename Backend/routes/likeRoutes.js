@@ -86,4 +86,20 @@ router.delete('/', apiKeyMiddleware, (req, res) => {
   );
 });
 
+router.get('/:userId', apiKeyMiddleware, (req, res) => {
+  const { userId } = req.params;
+
+  // Query to get all users who liked the given userId
+  db.query('SELECT user_id FROM likes WHERE liked_user_id = ?', [userId], (err, results) => {
+    if (err) return res.status(500).send(err);
+
+    if (results.length === 0) {
+      return res.json({ message: 'No one has liked you yet' });
+    }
+
+    res.json({ likedBy: results });
+  });
+});
+
+
 module.exports = router;
