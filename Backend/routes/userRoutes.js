@@ -110,7 +110,7 @@ router.post('/', async (req, res) => {
 
 
 
-router.post('/login', async (req, res) => {
+router.post('/login', apiKeyMiddleware, async (req, res) => {
   const { email, password } = req.body;
 
   db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
@@ -234,7 +234,7 @@ router.put('/:id', async (req, res) => {
   });
 });
 
-router.delete('/:user_id', async (req, res) => {
+router.delete('/:user_id', apiKeyMiddleware, async (req, res) => {
   const { user_id } = req.params; // Haal user_id uit de URL-parameter
 
   console.log('Request params:', req.params); // Log de request parameters voor debugging
