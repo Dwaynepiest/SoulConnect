@@ -30,9 +30,8 @@ app.use('/matches', matchRoutes);
 app.use('/create-room', chatRoomRoutes);
 app.use('/messages', messagesRoutes);
 
- 
-
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
