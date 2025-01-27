@@ -17,6 +17,7 @@ const messagesRoutes = require('./routes/messagesRoutes');
 const galleryRoutes = require('./routes/galleryRoutes');
 const galleryImagesRoutes = require('./routes/gallery_imagesRoutes');
 const verify_mail = require('./routes/verify_mail.js');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 // Create an Express app
 const app = express();
@@ -35,6 +36,7 @@ app.use('/messages', messagesRoutes);
 app.use('/gallery', galleryRoutes);
 app.use('/gallery_images', galleryImagesRoutes);
 app.use('/verify-email', verify_mail);
+app.use('/payment', paymentRoutes);
  
 
 
