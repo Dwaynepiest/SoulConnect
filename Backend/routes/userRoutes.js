@@ -113,7 +113,7 @@ router.post('/', async (req, res) => {
 
 
 
-router.post('/login', async (req, res) => {
+router.post('/login', apiKeyMiddleware, async (req, res) => {
   const { email, password } = req.body;
 
   db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
@@ -237,10 +237,8 @@ router.put('/:id', async (req, res) => {
   });
 });
 
-router.delete('/:user_id', async (req, res) => {
+router.delete('/:user_id', apiKeyMiddleware, async (req, res) => {
   const { user_id } = req.params; // Haal user_id uit de URL-parameter
-
-  console.log('Request params:', req.params); // Log de request parameters voor debugging
 
   if (!user_id) {
     return res.status(400).send('User ID is vereist om een gebruiker te verwijderen.');
@@ -257,21 +255,43 @@ router.delete('/:user_id', async (req, res) => {
         return res.status(404).send('Geen account gevonden');
       }
 
-      // Verwijder de gebruiker uit de database
-      db.query('DELETE FROM users WHERE user_id = ?', [user_id], (err, results) => {
+      // Begin met het verwijderen van gekoppelde records
+      db.query('DELETE FROM relationship WHERE user_id = ?', [user_id], (err) => {
+        if (err) console.error('Fout bij het verwijderen uit relationship:', err);
+      });
+
+      db.query('DELETE FROM extra WHERE user_id = ?', [user_id], (err) => {
+        if (err) console.error('Fout bij het verwijderen uit extra:', err);
+      });
+
+      db.query('DELETE FROM gallery WHERE user_id = ?', [user_id], (err) => {
+        if (err) console.error('Fout bij het verwijderen uit gallery:', err);
+      });
+
+      db.query('DELETE FROM matches WHERE user1_id = ? OR user2_id = ?', [user_id, user_id], (err) => {
+        if (err) console.error('Fout bij het verwijderen uit matches:', err);
+      });
+
+      db.query('DELETE FROM likes WHERE liker_id = ? OR liked_id = ?', [user_id, user_id], (err) => {
+        if (err) console.error('Fout bij het verwijderen uit likes:', err);
+      });
+
+      // Verwijder de gebruiker zelf
+      db.query('DELETE FROM users WHERE user_id = ?', [user_id], (err) => {
         if (err) {
-          return res.status(500).send('Fout bij het verwijderen van je account, contacteer een beheerder!.');
+          return res.status(500).send('Fout bij het verwijderen van je account, contacteer een beheerder!');
         }
 
+        // Stuur een succesbericht terug
         res.json({
-          message: 'Account succesvol verwijderd.',
+          message: 'Account en gekoppelde gegevens succesvol verwijderd.',
           user_id,
         });
       });
     });
   } catch (err) {
     console.error('Error during user deletion:', err);
-    res.status(501).send('Er is een fout opgetreden tijdens het verwijderen van je account, contacteer een beheerder!.');
+    res.status(501).send('Er is een fout opgetreden tijdens het verwijderen van je account, contacteer een beheerder!');
   }
 });
 

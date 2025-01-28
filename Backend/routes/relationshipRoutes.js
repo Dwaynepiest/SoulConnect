@@ -12,7 +12,7 @@ router.get('/', apiKeyMiddleware, (req, res) => {
 
 router.post('/:user_id', apiKeyMiddleware, async (req, res) => {
   const { user_id } = req.params;
-  const { preference, one_liner, relation, location } = req.body;
+  const { preference, one_liner, relation} = req.body;
 
   if (!user_id) {
     return res.status(400).send('user_id is verplicht.');
@@ -27,7 +27,7 @@ router.post('/:user_id', apiKeyMiddleware, async (req, res) => {
     if (results.length > 0) {
       // Update de gegevens als ze al bestaan
       db.query(
-        'UPDATE relationship SET preference = ?, one_liner = ?, relation = ?, location = ? WHERE user_id = ?',
+        'UPDATE relationship SET preference = ?, one_liner = ?, relation = ?, WHERE user_id = ?',
         [
           preference || results[0].preference,
           one_liner || results[0].one_liner,
@@ -53,7 +53,7 @@ router.post('/:user_id', apiKeyMiddleware, async (req, res) => {
     } else {
       // Voeg nieuwe gegevens toe als ze nog niet bestaan
       db.query(
-        'INSERT INTO relationship (user_id, preference, one_liner, relation, location) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO relationship (user_id, preference, one_liner, relation) VALUES (?, ?, ?, ?)',
         [user_id, preference, one_liner, relation, location],
         (err, results) => {
           if (err) {
@@ -67,7 +67,6 @@ router.post('/:user_id', apiKeyMiddleware, async (req, res) => {
             preference,
             one_liner,
             relation,
-            location,
           });
         }
       );
@@ -77,7 +76,7 @@ router.post('/:user_id', apiKeyMiddleware, async (req, res) => {
 
 router.put('/:user_id', apiKeyMiddleware, async (req, res) => {
   const { user_id } = req.params;
-  const { preference, one_liner, relation, location } = req.body;
+  const { preference, one_liner, relation } = req.body;
 
   if (!user_id) {
     return res.status(400).send('user_id is verplicht.');
@@ -101,7 +100,6 @@ router.put('/:user_id', apiKeyMiddleware, async (req, res) => {
         preference || results[0].preference, // Gebruik de bestaande waarde als de nieuwe ontbreekt
         one_liner || results[0].one_liner,
         relation || results[0].relation,
-        location || results[0].location,
         user_id,
       ],
       (err) => {
@@ -115,7 +113,6 @@ router.put('/:user_id', apiKeyMiddleware, async (req, res) => {
           preference: preference || results[0].preference,
           one_liner: one_liner || results[0].one_liner,
           relation: relation || results[0].relation,
-          location: location || results[0].location,
         });
       }
     );

@@ -44,7 +44,55 @@ router.post('/', apiKeyMiddleware, async (req, res) => {
     }
   });
   
-
+  router.delete('/:gallery_id', apiKeyMiddleware, async (req, res) => {
+    const { gallery_id } = req.params;
+  
+    console.log('Request parameters:', req.params); // Log de parameters voor debugging
+  
+    // Controleer of gallery_id aanwezig is
+    if (!gallery_id) {
+      return res.status(400).send('Gallery ID is verplicht.');
+    }
+  
+    try {
+      // Start met het verwijderen van gekoppelde records uit gallery_images
+      db.query(
+        'DELETE FROM gallery_images WHERE gallery_id = ?',
+        [gallery_id],
+        (err, results) => {
+          if (err) {
+            console.error('Fout bij het verwijderen van records uit gallery_images:', err);
+            return res.status(500).send('Fout bij het verwijderen van gekoppelde afbeeldingen.');
+          }
+  
+          // Ga verder met het verwijderen van de gallery zelf
+          db.query(
+            'DELETE FROM gallery WHERE gallery_id = ?',
+            [gallery_id],
+            (err, results) => {
+              if (err) {
+                console.error('Fout bij het verwijderen van de gallery:', err);
+                return res.status(500).send('Fout bij het verwijderen van de gallery uit de database.');
+              }
+  
+              // Controleer of er iets is verwijderd
+              if (results.affectedRows === 0) {
+                return res.status(404).send('Gallery met het opgegeven gallery_id niet gevonden.');
+              }
+  
+              res.json({
+                message: 'Gallery en gekoppelde afbeeldingen succesvol verwijderd.',
+                gallery_id,
+              });
+            }
+          );
+        }
+      );
+    } catch (err) {
+      console.error('Fout bij het verwerken van de aanvraag:', err);
+      res.status(500).send('Er is een fout opgetreden bij het verwijderen van de gallery.');
+    }
+  });
 
 
   module.exports = router;
