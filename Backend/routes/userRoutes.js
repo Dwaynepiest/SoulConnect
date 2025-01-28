@@ -18,23 +18,22 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-router.get('/', apiKeyMiddleware, (req, res) => {
-  db.query('SELECT * FROM users', (err, results) => {
-      if (err) return res.status(500).send(err);
-      res.json(results);
-  });
-});
-
 router.post('/', async (req, res) => {
-  const { 
-    nickname, 
-    email, 
-    password, 
-    birth_date, 
-    zip_code, 
-    gender, 
-    accept_service, 
-    foto
+  const {
+    nickname,
+    email,
+    password,
+    birth_date,
+    zip_code,
+    gender,
+    relation,
+    preference,
+    one_liner,
+    job,
+    education,
+    hobby,
+    about_you,
+    accept_service
   } = req.body;
 
   console.log('Request body:', req.body); // Log the request body for debugging
@@ -69,8 +68,24 @@ router.post('/', async (req, res) => {
 
       // Insert the new user with is_verified set to 0
       db.query(
-        'INSERT INTO users (nickname, email, password, birth_date, zip_code, gender, accept_service, foto, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
-        [nickname, email, hashedPassword, birth_date, zip_code, gender, accept_service, foto, verificationToken],
+        'INSERT INTO users (nickname, email, password, birth_date, zip_code, gender, relation, preference, one_liner, job, education, hobby, about_you, accept_service, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
+        [
+          nickname,
+          email,
+          hashedPassword,
+          birth_date,
+          zip_code,
+          gender,
+          relation,
+          preference,
+          one_liner,
+          job,
+          education,
+          hobby,
+          about_you,
+          accept_service,
+          verificationToken
+        ],
         async (err, results) => {
           if (err) {
             return res.status(500).send(err);
@@ -135,17 +150,23 @@ router.post('/login', apiKeyMiddleware, async (req, res) => {
   });
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res) => { 
   const { id } = req.params;
   const { 
     email, 
-    nickname, 
-    old_password, 
-    new_password, 
-    confirm_password, 
     zip_code, 
     gender, 
-    foto 
+    relation, 
+    preference, 
+    one_liner, 
+    job, 
+    education, 
+    hobby, 
+    about_you, 
+    foto, 
+    old_password, 
+    new_password, 
+    confirm_password 
   } = req.body;
 
   // Haal de bestaande gebruikergegevens op
@@ -177,7 +198,7 @@ router.put('/:id', async (req, res) => {
       // Als het e-mailadres niet wordt bijgewerkt of het is geldig, ga door met bijwerken
       updateUserData();
     }
-    
+
     // Functie om de gebruiker bij te werken
     async function updateUserData() {
       // Als het wachtwoord wordt bijgewerkt, controleren of het oude wachtwoord correct is en het nieuwe wachtwoord is bevestigd
@@ -207,20 +228,45 @@ router.put('/:id', async (req, res) => {
         updatedPassword = await bcrypt.hash(new_password, 10);
       }
 
-      // Update alleen de velden die zijn meegegeven
+      // Update alleen de velden die zijn meegegeven, behalve accept_service, birth_date, en nickname
       const updatedUser = {
         email: email || user.email,
-        nickname: nickname || user.nickname,
         zip_code: zip_code || user.zip_code,
         gender: gender || user.gender,
+        relation: relation || user.relation,
+        preference: preference || user.preference,
+        one_liner: one_liner || user.one_liner,
+        job: job || user.job,
+        education: education || user.education,
+        hobby: hobby || user.hobby,
+        about_you: about_you || user.about_you,
         foto: foto || user.foto,
         password: updatedPassword, // Zet het gehashte wachtwoord als het is bijgewerkt
+        accept_service: user.accept_service, // Bewaar de oude waarde van accept_service
+        birth_date: user.birth_date, // Bewaar de oude waarde van birth_date
+        nickname: user.nickname, // Bewaar de oude waarde van nickname
+        verificationToken: user.verificationToken // Bewaar de oude waarde van verificationToken
       };
 
       // Bijwerken van de gebruiker in de database
       db.query(
-        'UPDATE users SET email = ?, nickname = ?, zip_code = ?, gender = ?, foto = ?, password = ? WHERE user_id = ?',
-        [updatedUser.email, updatedUser.nickname, updatedUser.zip_code, updatedUser.gender, updatedUser.foto, updatedUser.password, id],
+        'UPDATE users SET email = ?, zip_code = ?, gender = ?, relation = ?, preference = ?, one_liner = ?, job = ?, education = ?, hobby = ?, about_you = ?, foto = ?, password = ?, verificationToken = ? WHERE user_id = ?',
+        [
+          updatedUser.email, 
+          updatedUser.zip_code, 
+          updatedUser.gender, 
+          updatedUser.relation, 
+          updatedUser.preference, 
+          updatedUser.one_liner, 
+          updatedUser.job, 
+          updatedUser.education, 
+          updatedUser.hobby, 
+          updatedUser.about_you, 
+          updatedUser.foto, 
+          updatedUser.password, 
+          updatedUser.verificationToken, 
+          id
+        ],
         (err, updateResults) => {
           if (err) {
             return res.status(500).send(err);
@@ -236,6 +282,7 @@ router.put('/:id', async (req, res) => {
     }
   });
 });
+
 
 router.delete('/:user_id', apiKeyMiddleware, async (req, res) => {
   const { user_id } = req.params; // Haal user_id uit de URL-parameter
