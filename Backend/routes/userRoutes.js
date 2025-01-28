@@ -26,15 +26,21 @@ router.get('/', apiKeyMiddleware, (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { 
-    nickname, 
-    email, 
-    password, 
-    birth_date, 
-    zip_code, 
-    gender, 
-    accept_service, 
-    foto
+  const {
+    nickname,
+    email,
+    password,
+    birth_date,
+    zip_code,
+    gender,
+    relation,
+    preference,
+    one_liner,
+    job,
+    education,
+    hobby,
+    about_you,
+    accept_service
   } = req.body;
 
   console.log('Request body:', req.body); // Log the request body for debugging
@@ -69,8 +75,24 @@ router.post('/', async (req, res) => {
 
       // Insert the new user with is_verified set to 0
       db.query(
-        'INSERT INTO users (nickname, email, password, birth_date, zip_code, gender, accept_service, foto, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
-        [nickname, email, hashedPassword, birth_date, zip_code, gender, accept_service, foto, verificationToken],
+        'INSERT INTO users (nickname, email, password, birth_date, zip_code, gender, relation, preference, one_liner, job, education, hobby, about_you, accept_service, is_verified, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
+        [
+          nickname,
+          email,
+          hashedPassword,
+          birth_date,
+          zip_code,
+          gender,
+          relation,
+          preference,
+          one_liner,
+          job,
+          education,
+          hobby,
+          about_you,
+          accept_service,
+          verificationToken
+        ],
         async (err, results) => {
           if (err) {
             return res.status(500).send(err);
@@ -110,8 +132,6 @@ router.post('/', async (req, res) => {
     res.status(500).send('Error occurred during registration.');
   }
 });
-
-
 
 router.post('/login', apiKeyMiddleware, async (req, res) => {
   const { email, password } = req.body;
