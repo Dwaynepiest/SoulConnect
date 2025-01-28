@@ -109,7 +109,7 @@ const generateExtra = (userId) => {
 // Generate relationship data for users with Dutch sentences
 const generateRelationship = (userId) => {
   const preferences = ['male', 'female'];
-  const relations = ['or', 'cr', 'fwb'];
+  const relations = ['or', 'fr', 'fwb'];
   return {
     user_id: userId,
     preference: faker.helpers.arrayElement(preferences),
