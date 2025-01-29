@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', apiKeyMiddleware, async (req, res) => {
   const {
     nickname,
     email,
@@ -245,12 +245,11 @@ router.put('/:id', async (req, res) => {
         accept_service: user.accept_service, // Bewaar de oude waarde van accept_service
         birth_date: user.birth_date, // Bewaar de oude waarde van birth_date
         nickname: user.nickname, // Bewaar de oude waarde van nickname
-        verificationToken: user.verificationToken // Bewaar de oude waarde van verificationToken
       };
 
       // Bijwerken van de gebruiker in de database
       db.query(
-        'UPDATE users SET email = ?, zip_code = ?, gender = ?, relation = ?, preference = ?, one_liner = ?, job = ?, education = ?, hobby = ?, about_you = ?, foto = ?, password = ?, verificationToken = ? WHERE user_id = ?',
+        'UPDATE users SET email = ?, zip_code = ?, gender = ?, relation = ?, preference = ?, one_liner = ?, job = ?, education = ?, hobby = ?, about_you = ?, foto = ?, password = ?, WHERE user_id = ?',
         [
           updatedUser.email, 
           updatedUser.zip_code, 
@@ -264,7 +263,6 @@ router.put('/:id', async (req, res) => {
           updatedUser.about_you, 
           updatedUser.foto, 
           updatedUser.password, 
-          updatedUser.verificationToken, 
           id
         ],
         (err, updateResults) => {
